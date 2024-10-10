@@ -1,0 +1,45 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Diagrama de flux present
+      id: diagrama-de-flux-present
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Diagrama de flux present
+        setup-command: ''
+        command: ls entrada_flux.pdf
+        timeout: 10
+        max-score: 1
+    - name: Execucio
+      id: execucio
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Execucio
+        setup-command: ''
+        command: python entrada.py
+        input: |-
+          3
+          5
+        expected-output: '15'
+        comparison-method: contains
+        timeout: 10
+        max-score: 1
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        DIAGRAMA-DE-FLUX-PRESENT_RESULTS: "${{steps.diagrama-de-flux-present.outputs.result}}"
+        EXECUCIO_RESULTS: "${{steps.execucio.outputs.result}}"
+      with:
+        runners: diagrama-de-flux-present,execucio
